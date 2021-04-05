@@ -1,5 +1,6 @@
 package com.lzf.flyingsocks.server.core;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lzf.flyingsocks.AbstractComponent;
 import com.lzf.flyingsocks.ComponentException;
 import com.lzf.flyingsocks.ConfigManager;
@@ -118,6 +119,8 @@ public class ClientProcessor extends AbstractComponent<ProxyProcessor> {
                 try {
                     provider.initialize(params);
                 } catch (Exception e) {
+                    System.out.println("Load OpenSSL Module occur a exception , " + e.getMessage());
+                    e.printStackTrace();
                     log.error("Load OpenSSL Module occur a exception", e);
                     System.exit(1);
                 }
@@ -208,25 +211,32 @@ public class ClientProcessor extends AbstractComponent<ProxyProcessor> {
      * @return 是否通过认证
      */
     private boolean doAuth(AuthMessage msg) {
+        log.info("当前请求认证方式：{}", msg.getAuthMethod());
         ServerConfig.Node n = parent.getServerConfig();
         if(n.authType.authMethod != msg.getAuthMethod()) { //如果认证方式不匹配
+            log.info("认证方式不匹配，服务器方式{}, 请求方式{}", n.authType.authMethod, msg.getAuthMethod());
             return false;
         }
 
         if(n.authType == ServerConfig.AuthType.SIMPLE) {
             List<String> keys = msg.getAuthMethod().getContainsKey();
+            log.info("请求认证keys:  {}", JSONObject.toJSONString(keys));
             for(String key : keys) {
-                if(!n.getArgument(key).equals(msg.getContent(key)))
+                if(!n.getArgument(key).equals(msg.getContent(key))) {
+                    log.info("SIMPLE 请求认证失败");
                     return false;
+                }
             }
+            log.info("SIMPLE 请求认证 return true");
             return true;
         } else if(n.authType == ServerConfig.AuthType.USER) {
             String group = n.getArgument("group");
             UserDatabase db = parent.getParentComponent().getUserDatabase();
-
+            log.info("USER 请求认证 return");
             return db.doAuth(group, msg.getContent("user"), msg.getContent("pass"));
         }
 
+        log.info("doAuth default return false");
         return false;
     }
 
@@ -245,7 +255,9 @@ public class ClientProcessor extends AbstractComponent<ProxyProcessor> {
         protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
             CertRequestMessage req = new CertRequestMessage(msg);
             boolean auth = doAuth(req);
+            log.info("doAuth return: {} -----------", auth);
             if(!auth) {
+                log.error("请求认证失败 --------- ");
                 ctx.close();
                 return;
             }
@@ -352,14 +364,11 @@ public class ClientProcessor extends AbstractComponent<ProxyProcessor> {
 
             boolean auth = doAuth(msg);
             if(!auth) {
-                if(log.isTraceEnabled())
-                    log.trace("Auth failure, from client {}", ((SocketChannel)ctx.channel()).remoteAddress().getHostName());
+                log.trace("Auth failure, from client {}", ((SocketChannel)ctx.channel()).remoteAddress().getHostName());
                 ctx.close();
                 return;
             } else {
-                if(log.isTraceEnabled()) {
-                    log.trace("Auth success, from client {}", ((SocketChannel)ctx.channel()).remoteAddress().getHostName());
-                }
+                log.trace("Auth success, from client {}", ((SocketChannel)ctx.channel()).remoteAddress().getHostName());
             }
 
             clientSession.passAuth();

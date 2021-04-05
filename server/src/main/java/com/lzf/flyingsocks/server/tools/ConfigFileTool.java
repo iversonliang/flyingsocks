@@ -6,10 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.lzf.flyingsocks.util.BaseUtils;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.Properties;
 import java.util.Scanner;
@@ -32,6 +29,24 @@ public final class ConfigFileTool {
 
         Properties p = new Properties();
         try {
+//            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+//            String path2 = "";
+//            InputStream inputStream = null;
+//            URL url = ConfigFileTool.class.getResource("");
+////            System.out.println("getResource(\"/\") " + url.getPath());
+//            if (!url.getPath().contains("!")) {
+//                url = Thread.currentThread().getContextClassLoader().getResource("");
+//                path2 = url.getPath();
+////                System.out.println("dev getContextClassLoader().getResource(\"\") " + path2);
+//                path2 += "BOOT-INF/classes/";
+////                System.out.println("path:" + path2);
+//                inputStream = new FileInputStream(path2 + "config.properties");
+//            } else {
+//                inputStream = ConfigFileTool.class.getResourceAsStream("/BOOT-INF/classes/config.properties");
+//            }
+//            if (inputStream == null) {
+//                throw new RuntimeException("can't load config.properties");
+//            }
             URL url = new URL("classpath://config.properties");
             p.load(url.openStream());
         } catch (IOException e) {
@@ -48,7 +63,7 @@ public final class ConfigFileTool {
             throw new Error("Unknown Operation system");
         }
 
-        if(!CFG_PATH.exists() && CFG_PATH.mkdirs()) {
+        if(!CFG_PATH.exists() && !CFG_PATH.mkdirs()) {
             throw new Error("Can not make directory at " + CFG_PATH.getAbsolutePath());
         } else if(CFG_PATH.isFile()) {
             throw new Error(CFG_PATH.getAbsolutePath() + " was a file, It's should be directory.");

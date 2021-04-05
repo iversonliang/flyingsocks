@@ -31,4 +31,10 @@ public final class ClasspathURLHandlerFactory implements URLStreamHandlerFactory
         else
             return null;
     }
+
+    public static void main(String[] args) {
+        ClasspathURLHandlerFactory factory = new ClasspathURLHandlerFactory(ClasspathURLHandler.class.getClassLoader());
+        factory.createURLStreamHandler("classpath");
+        System.out.println("done");
+    }
 }
