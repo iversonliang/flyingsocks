@@ -1,6 +1,14 @@
 # Default ignored files
 /workspace.xml
-.iml
-.idea
-target
+*.iml
+.gradle
+/.idea
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea
+/.idea/vcs.xml
+/.idea/misc.xml
+/build
 .idea/
+target
